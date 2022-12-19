@@ -1,10 +1,20 @@
 -- CreateTable
+CREATE TABLE "polls" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "ownerId" TEXT,
+    CONSTRAINT "polls_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "participants" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
-    "poolId" TEXT NOT NULL,
+    "pollId" TEXT NOT NULL,
     CONSTRAINT "participants_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "participants_poolId_fkey" FOREIGN KEY ("poolId") REFERENCES "pools" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT "participants_pollId_fkey" FOREIGN KEY ("pollId") REFERENCES "polls" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -36,25 +46,11 @@ CREATE TABLE "guesses" (
     CONSTRAINT "guesses_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "games" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
--- RedefineTables
-PRAGMA foreign_keys=OFF;
-CREATE TABLE "new_pools" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "title" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "ownerId" TEXT,
-    CONSTRAINT "pools_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
-);
-INSERT INTO "new_pools" ("code", "createdAt", "id", "title") SELECT "code", "createdAt", "id", "title" FROM "pools";
-DROP TABLE "pools";
-ALTER TABLE "new_pools" RENAME TO "pools";
-CREATE UNIQUE INDEX "pools_code_key" ON "pools"("code");
-PRAGMA foreign_key_check;
-PRAGMA foreign_keys=ON;
+-- CreateIndex
+CREATE UNIQUE INDEX "polls_code_key" ON "polls"("code");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "participants_userId_poolId_key" ON "participants"("userId", "poolId");
+CREATE UNIQUE INDEX "participants_userId_pollId_key" ON "participants"("userId", "pollId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");

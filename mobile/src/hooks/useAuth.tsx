@@ -4,6 +4,9 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 
+import { GOOGLE_CLIENT_ID } from '@env';
+import { api } from '../services/api';
+
 WebBrowser.maybeCompleteAuthSession();
 
 type User = {
@@ -29,7 +32,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientId: GOOGLE_CLIENT_ID,
     redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
     scopes: ['profile', 'email']
   });
@@ -49,8 +52,22 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  async function signInWithGoogle(accessToken: string) {
-    console.log(accessToken);
+  async function signInWithGoogle(access_token: string) {
+    try {
+      setIsSigningIn(true);
+
+      const tokenResponse = await api.post('/users', { access_token });
+      api.defaults.headers.common['Authorization'] = `Bearer ${tokenResponse.data.token}`;
+
+      const userInfoResponse = await api.get('/me');
+
+      setUser(userInfoResponse.data.user);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      setIsSigningIn(false);
+    }
   }
 
   useEffect(() => {
