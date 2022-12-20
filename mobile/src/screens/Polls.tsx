@@ -1,12 +1,44 @@
-import { VStack, Icon } from 'native-base';
+import { useCallback, useState } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { VStack, Icon, useToast, FlatList } from 'native-base';
 import { Octicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
 import { Button } from '../components/Button';
 import { Header } from '../components/Header';
+import { PollCard, PollProps } from '../components/PollCard';
+import { Loading } from '../components/Loading';
+import { EmptyPollList } from '../components/EmptyPollList';
+
+import { api } from '../services/api';
 
 export function Polls() {
+  const [polls, setPolls] = useState<PollProps[]>([]);
+  const [isFetchingPolls, setIsFetchingPolls] = useState(true);
+
+  const toast = useToast();
   const { navigate } = useNavigation();
+
+  async function fetchPolls() {
+    try {
+      setIsFetchingPolls(true);
+
+      const pollsResponse = await api.get('/polls');
+
+      setPolls(pollsResponse.data.polls);
+    } catch (error) {
+      toast.show({
+        title: 'Não foi possível carregar seus bolões',
+        placement: 'top',
+        bgColor: 'red.500'
+      });
+    } finally {
+      setIsFetchingPolls(false);
+    }
+  }
+
+  useFocusEffect(useCallback(() => {
+    fetchPolls();
+  }, []));
 
   return (
     <VStack flex={1} bgColor="gray.900">
@@ -19,6 +51,21 @@ export function Polls() {
           onPress={() => navigate('find')}
         />
       </VStack>
+
+      { isFetchingPolls 
+        ? <Loading /> 
+        : (
+          <FlatList
+            data={polls}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => <PollCard data={item} onPress={() => navigate('details', { id: item.id })} />}
+            showsVerticalScrollIndicator={false}          
+            ListEmptyComponent={<EmptyPollList />}
+            _contentContainerStyle={{ pb: 10 }}
+            px={5}
+          />
+        ) 
+      }
     </VStack>
   );
 }

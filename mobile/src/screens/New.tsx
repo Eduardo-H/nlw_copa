@@ -1,12 +1,54 @@
-import { Heading, Text, VStack } from 'native-base';
+import { useState } from 'react';
+import { Heading, Text, useToast, VStack } from 'native-base';
 
 import Logo from '../assets/logo.svg';
 
 import { Button } from '../components/Button';
 import { Header } from '../components/Header';
 import { Input } from '../components/Input';
+import { api } from '../services/api';
+import { Keyboard } from 'react-native';
 
 export function New() {
+  const [pollTitle, setPollTitle] = useState('');
+  const [isCreatingPoll, setIsCreatingPoll] = useState(false)
+
+  const toast = useToast();
+  
+  async function handleCreatePoll() {
+    Keyboard.dismiss();
+
+    if (!pollTitle.trim()) {
+      return toast.show({
+        title: 'Informe um nome para o seu bolão',
+        placement: 'top',
+        bgColor: 'red.500'
+      });
+    }
+
+    try {
+      setIsCreatingPoll(true);
+
+      await api.post('/polls', { title: pollTitle });
+
+      toast.show({
+        title: 'Bolão criado com sucesso!',
+        placement: 'top',
+        bgColor: 'green.500'
+      });
+
+      setPollTitle('');
+    } catch (error) {
+      toast.show({
+        title: 'Não foi possível criar o bolão',
+        placement: 'top',
+        bgColor: 'red.500'
+      });
+    } finally {
+      setIsCreatingPoll(false);
+    }
+  }
+
   return (
     <VStack flex={1} bgColor="gray.900">
       <Header title="Criar novo bolão" />
@@ -19,9 +61,18 @@ export function New() {
           e compartilhe entre amigos!
         </Heading>
 
-        <Input mb={2} placeholder="Qual o nome do seu bolão?" />
+        <Input 
+          mb={2} 
+          placeholder="Qual o nome do seu bolão?" 
+          onChangeText={setPollTitle} 
+          value={pollTitle} 
+        />
 
-        <Button title="Criar meu bolão" />
+        <Button 
+          title="Criar meu bolão" 
+          onPress={handleCreatePoll}
+          isLoading={isCreatingPoll}
+        />
 
         <Text color="text.200" fontSize="sm" textAlign="center" px={10} mt={4}>
           Após criar seu bolão, você receberá um código único

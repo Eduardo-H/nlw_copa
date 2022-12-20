@@ -6,6 +6,7 @@ import { PlusCircle, SoccerBall } from 'phosphor-react-native';
 import { New } from '../screens/New';
 import { Polls } from '../screens/Polls';
 import { Find } from '../screens/Find';
+import { Details } from '../screens/Details';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
@@ -21,7 +22,8 @@ export function AppRoutes() {
       tabBarInactiveTintColor: colors.gray[300],
       tabBarStyle: {
         position: 'absolute',
-        height: sizes[22],
+        paddingVertical: 15,
+        height: 80,
         borderTopWidth: 0,
         backgroundColor: colors.gray[800],
       },
@@ -51,6 +53,12 @@ export function AppRoutes() {
       <Screen
         name="find"
         component={Find}
+        options={{ tabBarButton: () => null }}
+      />
+
+      <Screen
+        name="details"
+        component={Details}
         options={{ tabBarButton: () => null }}
       />
     </Navigator>
